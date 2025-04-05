@@ -17,6 +17,12 @@ struct Pagamentos
     float valorpgto;
 };
 
+struct Cartoes
+{
+    int codpgto;
+    char numcartao[100];
+};
+
 void addProduct(FILE *file)
 {
 
@@ -79,6 +85,55 @@ void addPagamento(char metodoPagamento[100], float totalPagamento)
     clrscr();
 };
 
+void addCartao(char numcartao[100])
+{
+
+    /* INICIO PEGAR CODIGO */
+    
+    struct Pagamentos pagamentos;
+    FILE *filePagamentos;
+    
+    filePagamentos = fopen("pagamentos.dat", "ab+");
+    if (filePagamentos == NULL)
+    {
+        printf("Erro ao abrir o arquivo.\n");
+        return;
+    }
+    
+    int lastCod = 0;
+
+    rewind(filePagamentos);
+
+    while (fread(&pagamentos, sizeof(struct Pagamentos), 1, filePagamentos))
+    {
+        lastCod = pagamentos.codpgto;
+    };
+    
+    fclose(filePagamentos);
+    
+    /* FIM PEGAR CODIGO */
+    
+    struct Cartoes cartoes;
+    FILE *file;
+    
+    file = fopen("cartoes.dat", "ab+");
+    if (file == NULL)
+    {
+        printf("Erro ao abrir o arquivo.\n");
+        return;
+    }
+
+    rewind(file);
+
+    cartoes.codpgto = lastCod;
+    strcpy(cartoes.numcartao, numcartao);
+
+    fwrite(&cartoes, sizeof(struct Cartoes), 1, file);
+    fflush(file);
+
+    clrscr();
+};
+
 void listProducts(FILE *file)
 {
     struct Produtos produtos;
@@ -117,6 +172,31 @@ void listPagamentos()
 
 };
 
+void listCartoes()
+{
+    struct Cartoes cartoes;
+
+    FILE *file;
+
+    file = fopen("cartoes.dat", "ab+");
+    if (file == NULL)
+    {
+        printf("Erro ao abrir o arquivo.\n");
+        return;
+    }
+
+    rewind(file);
+    printf("\n");
+
+    while (fread(&cartoes, sizeof(struct Cartoes), 1, file))
+    {
+
+        printf("%d. %s\n", cartoes.codpgto, cartoes.numcartao);
+
+    };
+
+};
+
 void painelCardapio(FILE *file)
 {
     struct Produtos produtos;
@@ -128,6 +208,8 @@ void painelCardapio(FILE *file)
     char sacola[100] = "Nenhum item adicionado";
     float totalPagamento = 0.00;
     int unidades;
+    char inputCartao[100];
+    int numeroCartao;
 
     while (1)
     {
@@ -184,7 +266,31 @@ void painelCardapio(FILE *file)
                     clrscr();
                     return;
                 case 2:
-                    clrscr();
+                    clrscr();  
+                	
+                	while (1) {
+                		
+                		getchar();
+                		clrscr();
+					    printf("\nNumero do Cartao: ");
+					    fgets(inputCartao, 100, stdin);
+					    
+					    if (strlen(inputCartao) - 1 == 16) {
+					    	
+					    	printf("\nPermitido!");
+					    	getchar();
+					    	clrscr();
+					    	break;
+					    	
+						} else {
+				
+							printf("\nNegado, tente denovo!");
+					    	
+						};
+					};
+                	
+                	
+                	//numeroCartao = inputCartao - '0';
 
                     printf("\nPEDIDO PAGO COM ");
                     printf("\033[0;34m");
@@ -192,10 +298,20 @@ void painelCardapio(FILE *file)
                     printf("\033[0m");
 
                     getchar();
-                    getchar();
 
                     strcpy(metodoPagamento, "cartao de credito");
                     addPagamento(metodoPagamento, totalPagamento);
+                    
+                    inputCartao[4] = '*';
+                    inputCartao[5] = '*';
+                    inputCartao[6] = '*';
+                    inputCartao[7] = '*';
+                    inputCartao[8] = '*';
+                    inputCartao[9] = '*';
+                    inputCartao[10] = '*';
+                    inputCartao[11] = '*';
+
+                    addCartao(inputCartao);
                     clrscr();
                     return;
                 case 3:
@@ -275,6 +391,7 @@ void painelAdministracao(FILE *file)
         printf("========================\n");
         printf("1. Adicionar Produto\n");
         printf("2. Consultar Pagamentos\n");
+        printf("3. Consultar Cartoes\n");
         printf("\n0. Voltar\n");
         printf("\nEscolha uma opcao: ");
         scanf("%d", &choice);
@@ -288,6 +405,13 @@ void painelAdministracao(FILE *file)
         case 2:
             clrscr();
             listPagamentos();
+            getchar();
+            getchar();
+            clrscr();
+            break;
+        case 3:
+            clrscr();
+            listCartoes();
             getchar();
             getchar();
             clrscr();
